@@ -5,6 +5,8 @@ import (
 	"speakbuddy/config"
 	"speakbuddy/internal/models"
 	"speakbuddy/internal/routes"
+	"speakbuddy/internal/providers"
+	"speakbuddy/internal/controllers"
 )
 
 func InitializeApp() *fiber.App {
@@ -14,7 +16,12 @@ func InitializeApp() *fiber.App {
 
 	app := fiber.New()
 
-	routes.SetupRoutes(app)
+	whisper := providers.NewWhisperProvider()
+
+	speechController := controllers.NewSpeechController(whisper)
+
+	rs := routes.NewRouteSetup(speechController)
+	rs.Setup(app)
 
 	return app
 }
