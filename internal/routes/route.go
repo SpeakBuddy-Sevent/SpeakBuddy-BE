@@ -28,6 +28,10 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 
+	api.Get("/test", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"testing api": "mantap"})
+	})
+
 	//api.Post("/sessions", controllers.CreateSession)
 	//api.Get("/sessions/:id", controllers.GetSessionByID)
 
