@@ -9,7 +9,7 @@ import (
 )
 
 type GeminiProvider interface {
-	GetFeedbackFromGemini(inputText string) (string, error)
+	GetFeedbackFromGemini(targetText, inputText string) (string, error)
 }
 
 type geminiProvider struct {
@@ -33,14 +33,25 @@ func NewGeminiProvider() GeminiProvider {
 	return &geminiProvider{client: client}
 }
 
-func (g *geminiProvider) GetFeedbackFromGemini(inputText string) (string, error) {
+func (g *geminiProvider) GetFeedbackFromGemini(targetText, inputText string) (string, error) {
 	ctx := context.Background()
-	prompt := fmt.Sprintf(
-		"Analisis pelafalan anak berdasarkan teks berikut dan berikan saran perbaikan yang singkat dan ramah: %s",
-		inputText,
-	)
+	prompt := fmt.Sprintf(`
+Seorang anak sedang belajar berbicara dan melafalkan kata dengan bantuan aplikasi terapi bicara.
 
-	result, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", genai.Text(prompt), nil)
+Kalimat yang seharusnya diucapkan: "%s"
+Kalimat yang diucapkan anak: "%s"
+
+Tugasmu adalah membantu anak dengan cara:
+1. Berikan pujian atau semangat di awal agar anak merasa percaya diri.
+2. Jelaskan dengan lembut bagian mana yang terdengar kurang tepat (jangan gunakan kata "salah" secara langsung).
+3. Berikan contoh pelafalan yang benar, bisa dibagi per suku kata bila perlu.
+4. Tutup dengan kalimat penyemangat singkat yang positif.
+
+Gunakan gaya berbicara yang hangat, sederhana, dan cocok untuk anak-anak dengan speech delay.
+Pastikan hasilmu mudah dimengerti ketika diubah menjadi suara oleh sistem text-to-speech.
+`, targetText, inputText)
+
+	result, err := g.client.Models.GenerateContent(ctx, "gemini-2.0-flash", genai.Text(prompt), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate feedback: %v", err)
 	}

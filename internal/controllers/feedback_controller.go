@@ -3,7 +3,8 @@ package controllers
 import (
 	"github.com/gofiber/fiber/v2"
 	"speakbuddy/internal/services"
-	"strconv"
+	"speakbuddy/pkg/dto/request"
+	"speakbuddy/pkg/dto/response"
 )
 
 type FeedbackController struct {
@@ -15,28 +16,34 @@ func NewFeedbackController(service services.FeedbackService) *FeedbackController
 }
 
 func (fc *FeedbackController) AnalyzeFeedback(c *fiber.Ctx) error {
-	sessionIDStr := c.FormValue("session_id")
-	text := c.FormValue("text")
+	var req request.FeedbackRequest
 
-	if text == "" || sessionIDStr == "" {
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "request body tidak valid",
+		})
+	}
+
+	if req.SessionID == 0 || req.TargetText == "" || req.InputText == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "session_id dan text wajib diisi",
 		})
 	}
 
-	sessionID, err := strconv.ParseUint(sessionIDStr, 10, 64)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "session_id tidak valid",
-		})
-	}
-
-	result, err := fc.service.AnalyzeAndSaveFeedback(uint(sessionID), text)
+	result, err := fc.service.AnalyzeAndSaveFeedback(req.SessionID, req.TargetText, req.InputText)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
-	return c.JSON(result)
+	res := response.FeedbackResponse{
+		ID:        result.ID,
+		SessionID: result.SessionID,
+		AIModel:   result.AIModel,
+		Feedback:  result.Feedback,
+		CreatedAt: result.CreatedAt,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(res)
 }

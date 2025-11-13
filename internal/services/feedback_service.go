@@ -7,7 +7,7 @@ import (
 )
 
 type FeedbackService interface {
-	AnalyzeAndSaveFeedback(sessionID uint, text string) (*models.Feedback, error)
+	AnalyzeAndSaveFeedback(sessionID uint, targetText, inputText string) (*models.Feedback, error)
 }
 
 type feedbackService struct {
@@ -22,15 +22,15 @@ func NewFeedbackService(gemini providers.GeminiProvider, repo repository.Feedbac
 	}
 }
 
-func (s *feedbackService) AnalyzeAndSaveFeedback(sessionID uint, text string) (*models.Feedback, error) {
-	result, err := s.geminiProvider.GetFeedbackFromGemini(text)
+func (s *feedbackService) AnalyzeAndSaveFeedback(sessionID uint, targetText, inputText string) (*models.Feedback, error) {
+	result, err := s.geminiProvider.GetFeedbackFromGemini(targetText, inputText)
 	if err != nil {
 		return nil, err
 	}
 
 	feedback := &models.Feedback{
 		SessionID: sessionID,
-		AIModel:   "gemini-2.5-flash",
+		AIModel:   "gemini-2.0-flash",
 		Feedback:  result,
 	}
 
