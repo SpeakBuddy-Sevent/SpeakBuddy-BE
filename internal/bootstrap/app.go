@@ -1,12 +1,15 @@
 package bootstrap
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"speakbuddy/config"
-	"speakbuddy/internal/models"
-	"speakbuddy/internal/routes"
-	"speakbuddy/internal/providers"
 	"speakbuddy/internal/controllers"
+	"speakbuddy/internal/models"
+	"speakbuddy/internal/providers"
+	"speakbuddy/internal/repository"
+	"speakbuddy/internal/routes"
+	"speakbuddy/internal/services"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func InitializeApp() *fiber.App {
@@ -16,11 +19,16 @@ func InitializeApp() *fiber.App {
 
 	app := fiber.New()
 
-	whisper := providers.NewWhisperProvider()
+	whisperProvider := providers.NewWhisperProvider()
+	geminiProvider := providers.NewGeminiProvider()
 
-	speechController := controllers.NewSpeechController(whisper)
+	speechController := controllers.NewSpeechController(whisperProvider)
 
-	rs := routes.NewRouteSetup(speechController)
+	feedbackRepo := repository.NewFeedbackRepository()
+	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
+	feedbackController := controllers.NewFeedbackController(feedbackService)
+
+	rs := routes.NewRouteSetup(speechController, feedbackController)
 	rs.Setup(app)
 
 	return app

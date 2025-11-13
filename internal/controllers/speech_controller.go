@@ -28,8 +28,9 @@ func (c *SpeechController) Transcribe(ctx *fiber.Ctx) error {
 			"error": "failed to save file",
 		})
 	}
-	defer os.Remove(tmpPath)
+	defer os.Remove(tmpPath) // ngeremove path temporary di akhir (defer)
 
+	// speech to text buat mp3?
 	text, err := c.Whisper.Transcribe(tmpPath)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -37,6 +38,7 @@ func (c *SpeechController) Transcribe(ctx *fiber.Ctx) error {
 		})
 	}
 
+	// harapan return string -> bener salah aman
 	return ctx.JSON(fiber.Map{
 		"text": text,
 	})
