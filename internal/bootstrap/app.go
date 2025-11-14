@@ -13,22 +13,41 @@ import (
 )
 
 func InitializeApp() *fiber.App {
+	// Init database
 	config.InitDB()
 
-	config.DB.AutoMigrate(&models.User{}, &models.Session{}, &models.Feedback{})
+	config.DB.AutoMigrate(
+		&models.User{},
+		&models.Session{},
+		&models.Feedback{},
+	)
 
 	app := fiber.New()
 
+	// Providers
 	whisperProvider := providers.NewWhisperProvider()
 	geminiProvider := providers.NewGeminiProvider()
 
-	speechController := controllers.NewSpeechController(whisperProvider)
-
+	// Repositories
+	userRepo := repository.NewUserRepository(config.DB)
 	feedbackRepo := repository.NewFeedbackRepository()
+
+	// Services
+	authService := services.NewAuthService(userRepo)
 	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
+
+	// Controllers
+	authController := controllers.NewAuthController(authService)
+	speechController := controllers.NewSpeechController(whisperProvider)
 	feedbackController := controllers.NewFeedbackController(feedbackService)
 
-	rs := routes.NewRouteSetup(speechController, feedbackController)
+	// Routes
+	rs := routes.NewRouteSetup(
+		authController,
+		speechController,
+		feedbackController,
+	)
+
 	rs.Setup(app)
 
 	return app

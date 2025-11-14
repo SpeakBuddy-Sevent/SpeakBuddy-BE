@@ -15,24 +15,24 @@ func NewFeedbackController(service services.FeedbackService) *FeedbackController
 	return &FeedbackController{service: service}
 }
 
-func (fc *FeedbackController) AnalyzeFeedback(c *fiber.Ctx) error {
+func (fc *FeedbackController) AnalyzeFeedback(ctx *fiber.Ctx) error {
 	var req request.FeedbackRequest
 
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "request body tidak valid",
 		})
 	}
 
 	if req.SessionID == 0 || req.TargetText == "" || req.InputText == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "session_id dan text wajib diisi",
 		})
 	}
 
 	result, err := fc.service.AnalyzeAndSaveFeedback(req.SessionID, req.TargetText, req.InputText)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
@@ -45,5 +45,5 @@ func (fc *FeedbackController) AnalyzeFeedback(c *fiber.Ctx) error {
 		CreatedAt: result.CreatedAt,
 	}
 
-	return c.Status(fiber.StatusOK).JSON(res)
+	return ctx.Status(fiber.StatusOK).JSON(res)
 }
