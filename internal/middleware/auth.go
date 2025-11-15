@@ -1,20 +1,31 @@
 package middleware
 
 import (
+	"strings"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"os"
+	//"os"
+	"speakbuddy/pkg/utils"
 )
 
 func AuthRequired(c *fiber.Ctx) error {
-	tokenStr := c.Get("Authorization")
-	if tokenStr == "" {
-		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	authHeader := c.Get("Authorization")
+
+	if authHeader == "" {
+		return c.Status(401).JSON(fiber.Map{"error": "missing token"})
 	}
 
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return c.Status(401).JSON(fiber.Map{"error": "invalid auth format"})
+	}
+
+	tokenStr := parts[1]
+
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
+		return utils.JwtSecret(), nil
 	})
+
 	if err != nil || !token.Valid {
 		return c.Status(401).JSON(fiber.Map{"error": "invalid token"})
 	}
