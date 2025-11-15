@@ -22,38 +22,40 @@ func InitializeApp() *fiber.App {
 
 	config.DB.AutoMigrate(
 		&models.User{},
-		&models.Session{},
-		&models.SessionRecording{},
+		//&models.Session{},
 		&models.Feedback{},
+		&models.ReadingExercise{},
+		&models.ExerciseItem{},
+		&models.ExerciseAttempt{},
 	)
 
 	app := fiber.New()
 
 	// Providers
-	whisperProvider := providers.NewWhisperProvider()
 	googleSpeechProvider := providers.NewSpeechToTextProvider()
 	geminiProvider := providers.NewGeminiProvider()
 
 	// Repositories
 	userRepo := repository.NewUserRepository(config.DB)
 	feedbackRepo := repository.NewFeedbackRepository()
-	sessionRepo := repository.NewSessionRepository(config.DB)
+	itemRepo := repository.NewExerciseItemRepository(config.DB)
+	attemptRepo := repository.NewExerciseAttemptRepository(config.DB)
 
 	// Services
 	authService := services.NewAuthService(userRepo)
 	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
-	sessionService := services.NewSessionService(googleSpeechProvider, geminiProvider, sessionRepo)
+	exerciseService := services.NewExerciseService(googleSpeechProvider, geminiProvider, attemptRepo, itemRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(authService)
-	speechController := controllers.NewSpeechController(whisperProvider, googleSpeechProvider, sessionService)
 	feedbackController := controllers.NewFeedbackController(feedbackService)
+	exerciseController := controllers.NewExerciseController(exerciseService)
 
 	// Routes
 	rs := routes.NewRouteSetup(
 		authController,
-		speechController,
 		feedbackController,
+		exerciseController,
 	)
 
 	rs.Setup(app)
