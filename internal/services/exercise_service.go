@@ -4,6 +4,7 @@ import (
 	"speakbuddy/internal/models"
 	"speakbuddy/internal/providers"
 	"speakbuddy/internal/repository"
+	"speakbuddy/pkg/utils"
 )
 
 type ExerciseService interface {
@@ -51,13 +52,17 @@ func (s *exerciseService) TranscribeAndAnalyzeAttempt(userID uint, itemID uint, 
 		return nil, err
 	}
 
-	// Step 3: Simpan attempt hasil
+	// Step 3: Hitung accuracy (similarity antara target dan transcribed)
+	accuracy := utils.CalculateAccuracy(item.TargetText, transcribedText)
+
+	// Step 4: Simpan attempt hasil
 	attempt := &models.ExerciseAttempt{
 		UserID:          userID,
 		ItemID:          itemID,
 		TranscribedText: transcribedText,
 		AIFeedback:      feedback,
 		AIModel:         "gemini-2.0-flash",
+		Accuracy:        accuracy,
 	}
 
 	if err := s.attemptRepo.Create(attempt); err != nil {
