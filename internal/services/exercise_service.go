@@ -8,6 +8,10 @@ import (
 )
 
 type ExerciseService interface {
+	GetAllExerciseTemplates() ([]models.ReadingExerciseTemplate, error)
+	GetExerciseByLevel(level string) (*models.ReadingExerciseTemplate, error)
+	GetItemByID(itemID uint) (*models.ExerciseItem, error)
+	GetNextItem(exerciseID uint, currentItemNumber int) (*models.ExerciseItem, error)
 	TranscribeAndAnalyzeAttempt(userID uint, itemID uint, audioBytes []byte) (*models.ExerciseAttempt, error)
 }
 
@@ -16,6 +20,7 @@ type exerciseService struct {
 	geminiProvider providers.GeminiProvider
 	attemptRepo    repository.ExerciseAttemptRepository
 	itemRepo       repository.ExerciseItemRepository
+	templateRepo   repository.ReadingExerciseTemplateRepository
 }
 
 func NewExerciseService(
@@ -23,12 +28,14 @@ func NewExerciseService(
 	gemini providers.GeminiProvider,
 	attemptRepo repository.ExerciseAttemptRepository,
 	itemRepo repository.ExerciseItemRepository,
+	templateRepo repository.ReadingExerciseTemplateRepository,
 ) ExerciseService {
 	return &exerciseService{
 		googleSpeech:   googleSpeech,
 		geminiProvider: gemini,
 		attemptRepo:    attemptRepo,
 		itemRepo:       itemRepo,
+		templateRepo:   templateRepo,
 	}
 }
 
@@ -70,4 +77,29 @@ func (s *exerciseService) TranscribeAndAnalyzeAttempt(userID uint, itemID uint, 
 	}
 
 	return attempt, nil
+}
+
+// GetAllExerciseTemplates - get semua exercise template (dasar, menengah, lanjut)
+func (s *exerciseService) GetAllExerciseTemplates() ([]models.ReadingExerciseTemplate, error) {
+	return s.templateRepo.FindAll()
+}
+
+// GetExerciseByLevel - get 1 exercise template by level
+func (s *exerciseService) GetExerciseByLevel(level string) (*models.ReadingExerciseTemplate, error) {
+	return s.templateRepo.FindByLevel(level)
+}
+
+// GetItemByID - get 1 exercise item by id
+func (s *exerciseService) GetItemByID(itemID uint) (*models.ExerciseItem, error) {
+	return s.itemRepo.FindByID(itemID)
+}
+
+// GetNextItem - get next item (item_number + 1) dari exercise yang sama
+func (s *exerciseService) GetNextItem(exerciseID uint, currentItemNumber int) (*models.ExerciseItem, error) {
+	nextItemNumber := currentItemNumber + 1
+	if nextItemNumber > 5 {
+		// Sudah soal terakhir
+		return nil, nil
+	}
+	return s.itemRepo.FindByExerciseAndItemNumber(exerciseID, nextItemNumber)
 }

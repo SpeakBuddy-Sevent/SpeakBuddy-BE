@@ -8,8 +8,9 @@ import (
 
 // ReadingExerciseTemplateRepository untuk manage ReadingExerciseTemplate
 type ReadingExerciseTemplateRepository interface {
+	FindAll() ([]models.ReadingExerciseTemplate, error)
 	FindByID(id uint) (*models.ReadingExerciseTemplate, error)
-	FindByLevel(level string) ([]models.ReadingExerciseTemplate, error)
+	FindByLevel(level string) (*models.ReadingExerciseTemplate, error)
 }
 
 type readingExerciseTemplateRepository struct {
@@ -20,6 +21,14 @@ func NewReadingExerciseTemplateRepository(db *gorm.DB) ReadingExerciseTemplateRe
 	return &readingExerciseTemplateRepository{db}
 }
 
+func (r *readingExerciseTemplateRepository) FindAll() ([]models.ReadingExerciseTemplate, error) {
+	var exercises []models.ReadingExerciseTemplate
+	err := r.db.Preload("Items", func(db *gorm.DB) *gorm.DB {
+		return db.Order("item_number ASC")
+	}).Order("level ASC").Find(&exercises).Error
+	return exercises, err
+}
+
 func (r *readingExerciseTemplateRepository) FindByID(id uint) (*models.ReadingExerciseTemplate, error) {
 	var exercise models.ReadingExerciseTemplate
 	err := r.db.Preload("Items", func(db *gorm.DB) *gorm.DB {
@@ -28,18 +37,19 @@ func (r *readingExerciseTemplateRepository) FindByID(id uint) (*models.ReadingEx
 	return &exercise, err
 }
 
-func (r *readingExerciseTemplateRepository) FindByLevel(level string) ([]models.ReadingExerciseTemplate, error) {
-	var exercises []models.ReadingExerciseTemplate
+func (r *readingExerciseTemplateRepository) FindByLevel(level string) (*models.ReadingExerciseTemplate, error) {
+	var exercise models.ReadingExerciseTemplate
 	err := r.db.Where("level = ?", level).Preload("Items", func(db *gorm.DB) *gorm.DB {
 		return db.Order("item_number ASC")
-	}).Find(&exercises).Error
-	return exercises, err
+	}).First(&exercise).Error
+	return &exercise, err
 }
 
 // ExerciseItemRepository untuk manage ExerciseItem
 type ExerciseItemRepository interface {
 	FindByID(id uint) (*models.ExerciseItem, error)
 	FindByExerciseID(exerciseID uint) ([]models.ExerciseItem, error)
+	FindByExerciseAndItemNumber(exerciseID uint, itemNumber int) (*models.ExerciseItem, error)
 	Create(item *models.ExerciseItem) error
 }
 
@@ -61,6 +71,12 @@ func (r *exerciseItemRepository) FindByExerciseID(exerciseID uint) ([]models.Exe
 	var items []models.ExerciseItem
 	err := r.db.Where("exercise_id = ?", exerciseID).Order("item_number").Preload("Attempts").Find(&items).Error
 	return items, err
+}
+
+func (r *exerciseItemRepository) FindByExerciseAndItemNumber(exerciseID uint, itemNumber int) (*models.ExerciseItem, error) {
+	var item models.ExerciseItem
+	err := r.db.Where("exercise_id = ? AND item_number = ?", exerciseID, itemNumber).First(&item).Error
+	return &item, err
 }
 
 func (r *exerciseItemRepository) Create(item *models.ExerciseItem) error {

@@ -43,13 +43,14 @@ func InitializeApp() *fiber.App {
 	// Repositories
 	userRepo := repository.NewUserRepository(config.DB)
 	feedbackRepo := repository.NewFeedbackRepository()
+	templateRepo := repository.NewReadingExerciseTemplateRepository(config.DB)
 	itemRepo := repository.NewExerciseItemRepository(config.DB)
 	attemptRepo := repository.NewExerciseAttemptRepository(config.DB)
 
 	// Services
 	authService := services.NewAuthService(userRepo)
 	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
-	exerciseService := services.NewExerciseService(googleSpeechProvider, geminiProvider, attemptRepo, itemRepo)
+	exerciseService := services.NewExerciseService(googleSpeechProvider, geminiProvider, attemptRepo, itemRepo, templateRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(authService)

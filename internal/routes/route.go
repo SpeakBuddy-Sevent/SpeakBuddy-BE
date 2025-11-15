@@ -32,10 +32,6 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 
-	api.Get("/test", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"testing api": "mantap"})
-	})
-
 	api.Post("/auth/register", rs.AuthController.Register)
 	api.Post("/auth/login", rs.AuthController.Login)
 
@@ -44,6 +40,9 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 		protected.Post("/feedback/analyze", rs.FeedbackController.AnalyzeFeedback)
 
 		// Exercise endpoints
+		protected.Get("/exercise/levels", rs.ExerciseController.GetLevels)
+		protected.Post("/exercise/start", rs.ExerciseController.StartExercise)
+		protected.Get("/exercise/:exerciseID/next-item", rs.ExerciseController.GetNextItem)
 		protected.Post("/exercise/record", rs.ExerciseController.RecordAttempt)
 	}
 
