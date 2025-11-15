@@ -1,6 +1,8 @@
 package bootstrap
 
 import (
+	"os"
+
 	"speakbuddy/config"
 	"speakbuddy/internal/controllers"
 	"speakbuddy/internal/models"
@@ -13,12 +15,15 @@ import (
 )
 
 func InitializeApp() *fiber.App {
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "./config/gen-lang-client-0235190640-7bd0c00a7ced.json")
+
 	// Init database
 	config.InitDB()
 
 	config.DB.AutoMigrate(
 		&models.User{},
 		&models.Session{},
+		&models.SessionRecording{},
 		&models.Feedback{},
 	)
 
@@ -26,19 +31,22 @@ func InitializeApp() *fiber.App {
 
 	// Providers
 	whisperProvider := providers.NewWhisperProvider()
+	googleSpeechProvider := providers.NewSpeechToTextProvider()
 	geminiProvider := providers.NewGeminiProvider()
 
 	// Repositories
 	userRepo := repository.NewUserRepository(config.DB)
 	feedbackRepo := repository.NewFeedbackRepository()
+	sessionRepo := repository.NewSessionRepository(config.DB)
 
 	// Services
 	authService := services.NewAuthService(userRepo)
 	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
+	sessionService := services.NewSessionService(googleSpeechProvider, geminiProvider, sessionRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(authService)
-	speechController := controllers.NewSpeechController(whisperProvider)
+	speechController := controllers.NewSpeechController(whisperProvider, googleSpeechProvider, sessionService)
 	feedbackController := controllers.NewFeedbackController(feedbackService)
 
 	// Routes
