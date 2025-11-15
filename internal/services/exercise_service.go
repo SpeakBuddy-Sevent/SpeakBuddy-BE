@@ -7,7 +7,7 @@ import (
 )
 
 type ExerciseService interface {
-	TranscribeAndAnalyzeAttempt(itemID uint, audioBytes []byte) (*models.ExerciseAttempt, error)
+	TranscribeAndAnalyzeAttempt(userID uint, itemID uint, audioBytes []byte) (*models.ExerciseAttempt, error)
 }
 
 type exerciseService struct {
@@ -32,7 +32,7 @@ func NewExerciseService(
 }
 
 // TranscribeAndAnalyzeAttempt - transcribe audio + analyze dengan Gemini
-func (s *exerciseService) TranscribeAndAnalyzeAttempt(itemID uint, audioBytes []byte) (*models.ExerciseAttempt, error) {
+func (s *exerciseService) TranscribeAndAnalyzeAttempt(userID uint, itemID uint, audioBytes []byte) (*models.ExerciseAttempt, error) {
 	// Get target text dari exercise item
 	item, err := s.itemRepo.FindByID(itemID)
 	if err != nil {
@@ -53,6 +53,7 @@ func (s *exerciseService) TranscribeAndAnalyzeAttempt(itemID uint, audioBytes []
 
 	// Step 3: Simpan attempt hasil
 	attempt := &models.ExerciseAttempt{
+		UserID:          userID,
 		ItemID:          itemID,
 		TranscribedText: transcribedText,
 		AIFeedback:      feedback,

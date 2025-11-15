@@ -6,34 +6,33 @@ import (
 	"gorm.io/gorm"
 )
 
-// ReadingExerciseRepository untuk manage ReadingExercise
-type ReadingExerciseRepository interface {
-	Create(exercise *models.ReadingExercise) error
-	FindByID(id uint) (*models.ReadingExercise, error)
-	FindByUserID(userID uint) ([]models.ReadingExercise, error)
+// ReadingExerciseTemplateRepository untuk manage ReadingExerciseTemplate
+type ReadingExerciseTemplateRepository interface {
+	FindByID(id uint) (*models.ReadingExerciseTemplate, error)
+	FindByLevel(level string) ([]models.ReadingExerciseTemplate, error)
 }
 
-type readingExerciseRepository struct {
+type readingExerciseTemplateRepository struct {
 	db *gorm.DB
 }
 
-func NewReadingExerciseRepository(db *gorm.DB) ReadingExerciseRepository {
-	return &readingExerciseRepository{db}
+func NewReadingExerciseTemplateRepository(db *gorm.DB) ReadingExerciseTemplateRepository {
+	return &readingExerciseTemplateRepository{db}
 }
 
-func (r *readingExerciseRepository) Create(exercise *models.ReadingExercise) error {
-	return r.db.Create(exercise).Error
-}
-
-func (r *readingExerciseRepository) FindByID(id uint) (*models.ReadingExercise, error) {
-	var exercise models.ReadingExercise
-	err := r.db.Preload("Items").First(&exercise, id).Error
+func (r *readingExerciseTemplateRepository) FindByID(id uint) (*models.ReadingExerciseTemplate, error) {
+	var exercise models.ReadingExerciseTemplate
+	err := r.db.Preload("Items", func(db *gorm.DB) *gorm.DB {
+		return db.Order("item_number ASC")
+	}).First(&exercise, id).Error
 	return &exercise, err
 }
 
-func (r *readingExerciseRepository) FindByUserID(userID uint) ([]models.ReadingExercise, error) {
-	var exercises []models.ReadingExercise
-	err := r.db.Where("user_id = ?", userID).Preload("Items").Find(&exercises).Error
+func (r *readingExerciseTemplateRepository) FindByLevel(level string) ([]models.ReadingExerciseTemplate, error) {
+	var exercises []models.ReadingExerciseTemplate
+	err := r.db.Where("level = ?", level).Preload("Items", func(db *gorm.DB) *gorm.DB {
+		return db.Order("item_number ASC")
+	}).Find(&exercises).Error
 	return exercises, err
 }
 

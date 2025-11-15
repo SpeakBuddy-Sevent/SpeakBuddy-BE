@@ -9,6 +9,7 @@ import (
 	"speakbuddy/internal/providers"
 	"speakbuddy/internal/repository"
 	"speakbuddy/internal/routes"
+	"speakbuddy/internal/seeder"
 	"speakbuddy/internal/services"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,12 +23,16 @@ func InitializeApp() *fiber.App {
 
 	config.DB.AutoMigrate(
 		&models.User{},
-		//&models.Session{},
 		&models.Feedback{},
-		&models.ReadingExercise{},
+		&models.ReadingExerciseTemplate{},
 		&models.ExerciseItem{},
 		&models.ExerciseAttempt{},
 	)
+
+	// Seed default exercises
+	if err := seeder.SeedExercises(config.DB); err != nil {
+		panic("seeder error: " + err.Error())
+	}
 
 	app := fiber.New()
 

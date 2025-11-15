@@ -21,6 +21,15 @@ func NewExerciseController(exerciseService services.ExerciseService) *ExerciseCo
 
 // RecordAttempt - user record audio untuk 1 soal, transcribe + analyze langsung
 func (ec *ExerciseController) RecordAttempt(ctx *fiber.Ctx) error {
+	// Get user_id dari token
+	userIDInterface := ctx.Locals("user_id")
+	if userIDInterface == nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "user_id not found in token",
+		})
+	}
+	userID := uint(userIDInterface.(float64))
+
 	// Parse form data
 	file, err := ctx.FormFile("file")
 	if err != nil {
@@ -62,7 +71,7 @@ func (ec *ExerciseController) RecordAttempt(ctx *fiber.Ctx) error {
 	}
 
 	// Transcribe + Analyze
-	attempt, err := ec.exerciseService.TranscribeAndAnalyzeAttempt(uint(itemID), audioBytes)
+	attempt, err := ec.exerciseService.TranscribeAndAnalyzeAttempt(userID, uint(itemID), audioBytes)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "transcription/analysis failed: " + err.Error(),
