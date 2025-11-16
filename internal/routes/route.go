@@ -5,6 +5,7 @@ import (
 	"speakbuddy/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 type RouteSetup struct {
@@ -26,6 +27,14 @@ func NewRouteSetup(
 }
 
 func (rs *RouteSetup) Setup(app *fiber.App) {
+	app.Use(cors.New(cors.Config{
+        AllowOrigins:     "http://localhost:3000",
+        AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+        AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+        ExposeHeaders:    "Content-Length",
+        AllowCredentials: true,
+    }))
+
 	api := app.Group("/api/v1")
 
 	api.Get("/", func(c *fiber.Ctx) error {
