@@ -23,6 +23,8 @@ func InitializeApp() *fiber.App {
 
 	config.DB.AutoMigrate(
 		&models.User{},
+		&models.Profile{},
+		&models.DataAnak{},
 		&models.Feedback{},
 		&models.ReadingExerciseTemplate{},
 		&models.ExerciseItem{},
@@ -42,6 +44,9 @@ func InitializeApp() *fiber.App {
 
 	// Repositories
 	userRepo := repository.NewUserRepository(config.DB)
+	profileRepo := repository.NewProfileRepository(config.DB)
+	dataAnakRepo := repository.NewDataAnakRepository(config.DB)
+
 	feedbackRepo := repository.NewFeedbackRepository()
 	templateRepo := repository.NewReadingExerciseTemplateRepository(config.DB)
 	itemRepo := repository.NewExerciseItemRepository(config.DB)
@@ -49,11 +54,19 @@ func InitializeApp() *fiber.App {
 
 	// Services
 	authService := services.NewAuthService(userRepo)
+	userService := services.NewUserService(userRepo)
+	profileService := services.NewProfileService(profileRepo)
+	dataAnakService := services.NewDataAnakService(dataAnakRepo)
+
 	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
 	exerciseService := services.NewExerciseService(googleSpeechProvider, geminiProvider, attemptRepo, itemRepo, templateRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(authService)
+	userController := controllers.NewUserController(userService)
+	profileController := controllers.NewProfileController(profileService)
+	dataAnakController := controllers.NewDataAnakController(dataAnakService)
+
 	feedbackController := controllers.NewFeedbackController(feedbackService)
 	exerciseController := controllers.NewExerciseController(exerciseService)
 
@@ -62,6 +75,9 @@ func InitializeApp() *fiber.App {
 		authController,
 		feedbackController,
 		exerciseController,
+		profileController,
+		dataAnakController,
+		userController,
 	)
 
 	rs.Setup(app)

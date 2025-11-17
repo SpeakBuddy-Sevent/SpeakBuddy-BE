@@ -12,17 +12,26 @@ type RouteSetup struct {
 	AuthController     *controllers.AuthController
 	FeedbackController *controllers.FeedbackController
 	ExerciseController *controllers.ExerciseController
+	ProfileController  *controllers.ProfileController
+	DataAnakController *controllers.DataAnakController
+	UserController     *controllers.UserController
 }
 
 func NewRouteSetup(
 	authController *controllers.AuthController,
 	feedbackController *controllers.FeedbackController,
 	exerciseController *controllers.ExerciseController,
+	profileController *controllers.ProfileController,
+	dataAnakController *controllers.DataAnakController,
+	userController *controllers.UserController,
 ) *RouteSetup {
 	return &RouteSetup{
 		AuthController:     authController,
 		FeedbackController: feedbackController,
 		ExerciseController: exerciseController,
+		ProfileController:  profileController,
+		DataAnakController: dataAnakController,
+		UserController:     userController,
 	}
 }
 
@@ -53,6 +62,17 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 		protected.Post("/exercise/start", rs.ExerciseController.StartExercise)
 		protected.Get("/exercise/:exerciseID/next-item", rs.ExerciseController.GetNextItem)
 		protected.Post("/exercise/record", rs.ExerciseController.RecordAttempt)
+
+		// Profile Management
+		protected.Get("/profile", rs.ProfileController.Get)
+		protected.Post("/profile", rs.ProfileController.Upsert)
+
+		// Data Anak Management
+		protected.Get("/data-anak", rs.DataAnakController.Get)
+		protected.Post("/data-anak", rs.DataAnakController.Upsert)
+
+		// Update User Name
+		protected.Patch("/user/name", rs.UserController.UpdateName)
 	}
 
 }
