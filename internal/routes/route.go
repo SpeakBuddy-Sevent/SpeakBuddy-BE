@@ -15,6 +15,7 @@ type RouteSetup struct {
 	ProfileController  *controllers.ProfileController
 	DataAnakController *controllers.DataAnakController
 	UserController     *controllers.UserController
+	ConsultationController *controllers.ConsultationController
 }
 
 func NewRouteSetup(
@@ -24,6 +25,7 @@ func NewRouteSetup(
 	profileController *controllers.ProfileController,
 	dataAnakController *controllers.DataAnakController,
 	userController *controllers.UserController,
+	consultationController *controllers.ConsultationController,
 ) *RouteSetup {
 	return &RouteSetup{
 		AuthController:     authController,
@@ -32,6 +34,7 @@ func NewRouteSetup(
 		ProfileController:  profileController,
 		DataAnakController: dataAnakController,
 		UserController:     userController,
+		ConsultationController: consultationController,
 	}
 }
 
@@ -73,6 +76,10 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 
 		// Update User Name
 		protected.Patch("/user/name", rs.UserController.UpdateName)
+
+		protected.Post("/consultation/book/:therapistUserID", rs.ConsultationController.Book)
+		protected.Get("/consultation/my", rs.ConsultationController.MyConsultations)
+		protected.Get("/consultation/therapist", rs.ConsultationController.TherapistConsultations)
 	}
 
 }

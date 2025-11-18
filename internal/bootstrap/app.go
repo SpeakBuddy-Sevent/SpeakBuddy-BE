@@ -29,6 +29,7 @@ func InitializeApp() *fiber.App {
 		&models.ReadingExerciseTemplate{},
 		&models.ExerciseItem{},
 		&models.ExerciseAttempt{},
+		&models.Consultation{},
 	)
 
 	// Seed default exercises
@@ -51,6 +52,7 @@ func InitializeApp() *fiber.App {
 	templateRepo := repository.NewReadingExerciseTemplateRepository(config.DB)
 	itemRepo := repository.NewExerciseItemRepository(config.DB)
 	attemptRepo := repository.NewExerciseAttemptRepository(config.DB)
+	consultationRepo := repository.NewConsultationRepository(config.DB)
 
 	// Services
 	authService := services.NewAuthService(userRepo)
@@ -60,6 +62,7 @@ func InitializeApp() *fiber.App {
 
 	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
 	exerciseService := services.NewExerciseService(googleSpeechProvider, geminiProvider, attemptRepo, itemRepo, templateRepo)
+	consultationService := services.NewConsultationService(consultationRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(authService)
@@ -69,6 +72,7 @@ func InitializeApp() *fiber.App {
 
 	feedbackController := controllers.NewFeedbackController(feedbackService)
 	exerciseController := controllers.NewExerciseController(exerciseService)
+	consultationController := controllers.NewConsultationController(consultationService)
 
 	// Routes
 	rs := routes.NewRouteSetup(
@@ -78,6 +82,7 @@ func InitializeApp() *fiber.App {
 		profileController,
 		dataAnakController,
 		userController,
+		consultationController,
 	)
 
 	rs.Setup(app)
