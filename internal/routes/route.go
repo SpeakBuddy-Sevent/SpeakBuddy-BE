@@ -16,6 +16,7 @@ type RouteSetup struct {
 	DataAnakController *controllers.DataAnakController
 	UserController     *controllers.UserController
 	ConsultationController *controllers.ConsultationController
+	ChatController     *controllers.ChatController
 }
 
 func NewRouteSetup(
@@ -26,6 +27,7 @@ func NewRouteSetup(
 	dataAnakController *controllers.DataAnakController,
 	userController *controllers.UserController,
 	consultationController *controllers.ConsultationController,
+	chatController *controllers.ChatController,
 ) *RouteSetup {
 	return &RouteSetup{
 		AuthController:     authController,
@@ -35,6 +37,7 @@ func NewRouteSetup(
 		DataAnakController: dataAnakController,
 		UserController:     userController,
 		ConsultationController: consultationController,
+		ChatController:     chatController,
 	}
 }
 
@@ -80,6 +83,11 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 		protected.Post("/consultation/book/:therapistUserID", rs.ConsultationController.Book)
 		protected.Get("/consultation/my", rs.ConsultationController.MyConsultations)
 		protected.Get("/consultation/therapist", rs.ConsultationController.TherapistConsultations)
+
+		protected.Post("/chat/:therapistID/send", rs.ChatController.SendMessage)
+		protected.Get("/chat/:chatID/messages", rs.ChatController.GetMessages)
+		protected.Get("/chat/me", rs.ChatController.MyChats)
+
 	}
 
 }

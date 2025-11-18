@@ -20,6 +20,7 @@ func InitializeApp() *fiber.App {
 
 	// Init database
 	config.InitDB()
+	config.InitMongo()
 
 	config.DB.AutoMigrate(
 		&models.User{},
@@ -53,6 +54,7 @@ func InitializeApp() *fiber.App {
 	itemRepo := repository.NewExerciseItemRepository(config.DB)
 	attemptRepo := repository.NewExerciseAttemptRepository(config.DB)
 	consultationRepo := repository.NewConsultationRepository(config.DB)
+	chatRepo := repository.NewChatRepository(config.MongoDB)
 
 	// Services
 	authService := services.NewAuthService(userRepo)
@@ -63,6 +65,7 @@ func InitializeApp() *fiber.App {
 	feedbackService := services.NewFeedbackService(geminiProvider, feedbackRepo)
 	exerciseService := services.NewExerciseService(googleSpeechProvider, geminiProvider, attemptRepo, itemRepo, templateRepo)
 	consultationService := services.NewConsultationService(consultationRepo)
+	chatService := services.NewChatService(chatRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(authService)
@@ -73,6 +76,7 @@ func InitializeApp() *fiber.App {
 	feedbackController := controllers.NewFeedbackController(feedbackService)
 	exerciseController := controllers.NewExerciseController(exerciseService)
 	consultationController := controllers.NewConsultationController(consultationService)
+	chatController := controllers.NewChatController(chatService)
 
 	// Routes
 	rs := routes.NewRouteSetup(
@@ -83,6 +87,7 @@ func InitializeApp() *fiber.App {
 		dataAnakController,
 		userController,
 		consultationController,
+		chatController,
 	)
 
 	rs.Setup(app)
