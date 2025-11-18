@@ -17,6 +17,7 @@ type RouteSetup struct {
 	UserController     *controllers.UserController
 	ConsultationController *controllers.ConsultationController
 	ChatController     *controllers.ChatController
+	TherapistController *controllers.TherapistController
 }
 
 func NewRouteSetup(
@@ -28,6 +29,7 @@ func NewRouteSetup(
 	userController *controllers.UserController,
 	consultationController *controllers.ConsultationController,
 	chatController *controllers.ChatController,
+	therapistController *controllers.TherapistController,
 ) *RouteSetup {
 	return &RouteSetup{
 		AuthController:     authController,
@@ -38,6 +40,7 @@ func NewRouteSetup(
 		UserController:     userController,
 		ConsultationController: consultationController,
 		ChatController:     chatController,
+		TherapistController: therapistController,
 	}
 }
 
@@ -58,6 +61,11 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 
 	api.Post("/auth/register", rs.AuthController.Register)
 	api.Post("/auth/login", rs.AuthController.Login)
+
+	therapist := api.Group("/therapists")
+	therapist.Get("/", rs.TherapistController.GetAll)
+	therapist.Get("/:id", rs.TherapistController.GetByID)
+
 
 	protected := api.Group("/", middleware.AuthRequired)
 	{

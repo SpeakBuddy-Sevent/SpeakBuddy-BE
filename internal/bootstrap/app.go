@@ -66,6 +66,7 @@ func InitializeApp() *fiber.App {
 	exerciseService := services.NewExerciseService(googleSpeechProvider, geminiProvider, attemptRepo, itemRepo, templateRepo)
 	consultationService := services.NewConsultationService(consultationRepo)
 	chatService := services.NewChatService(chatRepo)
+	therapistService := services.NewTherapistService(userRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(authService)
@@ -77,6 +78,7 @@ func InitializeApp() *fiber.App {
 	exerciseController := controllers.NewExerciseController(exerciseService)
 	consultationController := controllers.NewConsultationController(consultationService)
 	chatController := controllers.NewChatController(chatService)
+	therapistController := controllers.NewTherapistController(therapistService)
 
 	// Routes
 	rs := routes.NewRouteSetup(
@@ -88,6 +90,7 @@ func InitializeApp() *fiber.App {
 		userController,
 		consultationController,
 		chatController,
+		therapistController,
 	)
 
 	rs.Setup(app)
