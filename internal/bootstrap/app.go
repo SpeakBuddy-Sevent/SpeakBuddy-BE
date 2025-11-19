@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"os"
+	// "os"
 
 	"speakbuddy/config"
 	"speakbuddy/internal/controllers"
@@ -16,7 +16,11 @@ import (
 )
 
 func InitializeApp() *fiber.App {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "./config/gen-lang-client-0235190640-7bd0c00a7ced.json")
+	if err := setupGoogleCredentials(); err != nil {
+    	panic("google credentials error: " + err.Error())
+	}
+
+	// os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "./config/gen-lang-client-0235190640-7bd0c00a7ced.json")
 
 	// Init database
 	config.InitDB()
