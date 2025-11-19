@@ -9,6 +9,10 @@ import (
 )
 
 func AuthRequired(c *fiber.Ctx) error {
+	if c.Method() == fiber.MethodOptions {
+        return c.Next()
+    }
+
 	authHeader := c.Get("Authorization")
 
 	if authHeader == "" {
