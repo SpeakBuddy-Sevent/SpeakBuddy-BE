@@ -23,13 +23,34 @@ func NewExerciseController(exerciseService services.ExerciseService) *ExerciseCo
 // RecordAttempt - user record audio untuk 1 soal, transcribe + analyze langsung
 func (ec *ExerciseController) RecordAttempt(ctx *fiber.Ctx) error {
 	// Get user_id dari token
-	userIDInterface := ctx.Locals("user_id")
-	if userIDInterface == nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "user_id not found in token",
-		})
-	}
-	userID := uint(userIDInterface.(float64))
+	userID := ctx.Locals("user_id").(uint)
+	// if userIDInterface == nil {
+	// 	return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+	// 		"error": "user_id not found in token",
+	// 	})
+	// }
+	// var userID uint
+
+	// switch v := userIDInterface.(type) {
+	// case float64:
+	// 	userID = uint(v)
+	// case int:
+	// 	userID = uint(v)
+	// case int32:
+	// 	userID = uint(v)
+	// case int64:
+	// 	userID = uint(v)
+	// case uint:
+	// 	userID = v
+	// case uint32:
+	// 	userID = uint(v)
+	// case uint64:
+	// 	userID = uint(v)
+	// default:
+	// 	return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+	// 		"error": "invalid user_id type",
+	// 	})
+	// }
 
 	// Parse form data
 	file, err := ctx.FormFile("file")
@@ -63,7 +84,7 @@ func (ec *ExerciseController) RecordAttempt(ctx *fiber.Ctx) error {
 	// }
 	// defer os.Remove(tmpPath)
 
-	tmpFile, err := os.CreateTemp("/tmp", "upload-*.wav")
+	tmpFile, err := os.CreateTemp("", "upload-*.wav")
     if err != nil {
         return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
             "error": "failed to create temp file",
