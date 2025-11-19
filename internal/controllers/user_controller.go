@@ -35,3 +35,17 @@ func (uc *UserController) UpdateName(ctx *fiber.Ctx) error {
 		"message": "name updated",
 	})
 }
+
+func (uc *UserController) FindByID(ctx *fiber.Ctx) error {
+    userID := ctx.Locals("user_id").(uint)
+
+    user, err := uc.service.GetByID(userID)
+    if err != nil {
+        return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": err.Error(),
+        })
+    }
+
+    return ctx.JSON(user)
+}
+

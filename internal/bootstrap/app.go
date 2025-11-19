@@ -57,7 +57,7 @@ func InitializeApp() *fiber.App {
 	chatRepo := repository.NewChatRepository(config.MongoDB)
 
 	// Services
-	authService := services.NewAuthService(userRepo)
+	authService := services.NewAuthService(userRepo, profileRepo, dataAnakRepo)
 	userService := services.NewUserService(userRepo)
 	profileService := services.NewProfileService(profileRepo)
 	dataAnakService := services.NewDataAnakService(dataAnakRepo)

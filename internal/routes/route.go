@@ -71,6 +71,8 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 	{
 		protected.Post("/feedback/analyze", rs.FeedbackController.AnalyzeFeedback)
 
+		protected.Get("/user", rs.UserController.FindByID)
+
 		// Exercise endpoints
 		protected.Get("/exercise/levels", rs.ExerciseController.GetLevels)
 		protected.Post("/exercise/start", rs.ExerciseController.StartExercise)

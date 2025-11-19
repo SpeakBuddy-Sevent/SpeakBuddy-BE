@@ -31,7 +31,11 @@ func AuthRequired(c *fiber.Ctx) error {
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
-	c.Locals("user_id", claims["user_id"])
+	userIDFloat, ok := claims["user_id"].(float64)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "invalid user_id in token"})
+	}
+	c.Locals("user_id", uint(userIDFloat))
 	c.Locals("role", claims["role"])
 
 	return c.Next()

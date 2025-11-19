@@ -14,10 +14,17 @@ type AuthService interface {
 
 type authService struct {
 	userRepo repository.UserRepository
+	profileRepo  repository.ProfileRepository
+	dataAnakRepo repository.DataAnakRepository
 }
 
-func NewAuthService(repo repository.UserRepository) AuthService {
-	return &authService{userRepo: repo}
+func NewAuthService(userRepo repository.UserRepository,
+	profileRepo repository.ProfileRepository,
+	dataAnakRepo repository.DataAnakRepository,) AuthService {
+	return &authService{
+		userRepo: userRepo,
+		profileRepo:  profileRepo,
+		dataAnakRepo: dataAnakRepo,}
 }
 
 func (s *authService) Register(name, email, password string) (*models.User, error) {
@@ -27,11 +34,35 @@ func (s *authService) Register(name, email, password string) (*models.User, erro
 		Name:         name,
 		Email:        email,
 		PasswordHash: hash,
+		Role:         "user",
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
 		return nil, err
 	}
+
+	profile := &models.Profile{
+		UserID: user.ID,
+		Age:    0,
+		Sex:    "",
+		Phone:  "",
+	}
+
+	if err := s.profileRepo.Create(profile); err != nil {
+		return nil, err
+	}
+
+	dataAnak := &models.DataAnak{
+		UserID:    user.ID,
+		ChildName: "",
+		ChildAge:  0,
+		ChildSex:  "",
+	}
+
+	if err := s.dataAnakRepo.Create(dataAnak); err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
