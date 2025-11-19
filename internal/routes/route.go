@@ -97,6 +97,7 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 		protected.Post("/chat/send/:therapistID", rs.ChatController.SendMessage)
 		protected.Get("/chat/:chatID/messages", rs.ChatController.GetMessages)
 		protected.Get("/chat/me", rs.ChatController.MyChats)
+		protected.Post("/chat/:chatID/send", rs.ChatController.SendToChat)
 
 	}
 

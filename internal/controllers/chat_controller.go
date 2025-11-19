@@ -19,37 +19,43 @@ func NewChatController(service services.ChatService) *ChatController {
 }
 
 func (cc *ChatController) SendMessage(ctx *fiber.Ctx) error {
-	// user_id stored in ctx.Locals from middleware (assumed uint)
-	userID := ctx.Locals("user_id").(uint)
-	therapistID := ctx.Params("therapistID")
+    userID, ok := ctx.Locals("user_id").(uint)
+    if !ok {
+        return ctx.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+    }
 
-	var req request.SendMessageRequest
-	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.Status(400).JSON(fiber.Map{"error": "invalid request"})
-	}
+    therapistID := ctx.Params("therapistID")
+    if therapistID == "" {
+        return ctx.Status(400).JSON(fiber.Map{"error": "therapistID required"})
+    }
 
-	// Validate message text
-	if req.Text == "" {
-		return ctx.Status(400).JSON(fiber.Map{"error": "text is required"})
-	}
+    var req request.SendMessageRequest
+    if err := ctx.BodyParser(&req); err != nil {
+        return ctx.Status(400).JSON(fiber.Map{"error": "invalid request"})
+    }
 
-	msg, err := cc.service.SendMessage(
-		fmt.Sprint(userID),
-		therapistID,
-		req,
-	)
-	if err != nil {
-		return ctx.Status(500).JSON(fiber.Map{"error": err.Error()})
-	}
+    if req.Text == "" {
+        return ctx.Status(400).JSON(fiber.Map{"error": "text is required"})
+    }
 
-	return ctx.JSON(response.MessageResponse{
-		ID:        msg.ID.Hex(),
-		ChatID:    msg.ChatID.Hex(),
-		SenderID:  msg.SenderID,
-		Text:      msg.Text,
-		Timestamp: msg.Timestamp.UTC().Format(time.RFC3339),
-	})
+    msg, err := cc.service.SendMessage(
+        fmt.Sprint(userID),
+        therapistID,
+        req,
+    )
+    if err != nil {
+        return ctx.Status(500).JSON(fiber.Map{"error": err.Error()})
+    }
+
+    return ctx.JSON(response.MessageResponse{
+        ID:        msg.ID.Hex(),
+        ChatID:    msg.ChatID.Hex(),
+        SenderID:  msg.SenderID,
+        Text:      msg.Text,
+        Timestamp: msg.Timestamp.UTC().Format(time.RFC3339),
+    })
 }
+
 
 func (cc *ChatController) GetMessages(ctx *fiber.Ctx) error {
 	chatID := ctx.Params("chatID")
@@ -109,3 +115,42 @@ func (cc *ChatController) MyChats(ctx *fiber.Ctx) error {
         "message": "success", 
     })
 }
+
+func (cc *ChatController) SendToChat(c *fiber.Ctx) error {
+    chatID := c.Params("chatID")
+    if chatID == "" {
+        return c.Status(400).JSON(fiber.Map{"error": "chatID required"})
+    }
+
+    rawUserID := c.Locals("user_id")
+    if rawUserID == nil {
+        return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+    }
+
+    userID := fmt.Sprint(rawUserID)
+
+    var req request.SendMessageRequest
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(400).JSON(fiber.Map{"error": "invalid request"})
+    }
+
+    if req.Text == "" {
+        return c.Status(400).JSON(fiber.Map{"error": "text is required"})
+    }
+
+    msg, err := cc.service.SendMessageToChat(chatID, userID, req)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+    }
+
+    return c.JSON(response.MessageResponse{
+        ID:        msg.ID.Hex(),
+        ChatID:    msg.ChatID.Hex(),
+        SenderID:  msg.SenderID,
+        Text:      msg.Text,
+        Timestamp: msg.Timestamp.UTC().Format(time.RFC3339),
+    })
+}
+
+
+
