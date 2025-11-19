@@ -55,21 +55,44 @@ func (ec *ExerciseController) RecordAttempt(ctx *fiber.Ctx) error {
 	}
 
 	// Save file temporarily
-	tmpPath := "./tmp/" + file.Filename
-	if err := ctx.SaveFile(file, tmpPath); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to save file",
-		})
-	}
-	defer os.Remove(tmpPath)
+	// tmpPath := "./tmp/" + file.Filename
+	// if err := ctx.SaveFile(file, tmpPath); err != nil {
+	// 	return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	// 		"error": "failed to save file",
+	// 	})
+	// }
+	// defer os.Remove(tmpPath)
+
+	tmpFile, err := os.CreateTemp("/tmp", "upload-*.wav")
+    if err != nil {
+        return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "failed to create temp file",
+        })
+    }
+    defer os.Remove(tmpFile.Name())
+
+    // Simpan file
+    if err := ctx.SaveFile(file, tmpFile.Name()); err != nil {
+        return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "failed to save file",
+        })
+    }
+
+	audioBytes, err := os.ReadFile(tmpFile.Name())
+    if err != nil {
+        return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "failed to read audio file",
+        })
+    }
+
 
 	// Read audio file
-	audioBytes, err := os.ReadFile(tmpPath)
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to read audio file",
-		})
-	}
+	// audioBytes, err := os.ReadFile(tmpPath)
+	// if err != nil {
+	// 	return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	// 		"error": "failed to read audio file",
+	// 	})
+	// }
 
 	// Transcribe + Analyze
 	attempt, err := ec.exerciseService.TranscribeAndAnalyzeAttempt(userID, uint(itemID), audioBytes)
