@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"time"
 	"github.com/gofiber/fiber/v2"
 	"speakbuddy/internal/services"
 	"speakbuddy/pkg/dto/request"
@@ -18,12 +19,18 @@ func NewChatController(service services.ChatService) *ChatController {
 }
 
 func (cc *ChatController) SendMessage(ctx *fiber.Ctx) error {
+	// user_id stored in ctx.Locals from middleware (assumed uint)
 	userID := ctx.Locals("user_id").(uint)
 	therapistID := ctx.Params("therapistID")
 
 	var req request.SendMessageRequest
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(400).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	// Validate message text
+	if req.Text == "" {
+		return ctx.Status(400).JSON(fiber.Map{"error": "text is required"})
 	}
 
 	msg, err := cc.service.SendMessage(
@@ -36,11 +43,11 @@ func (cc *ChatController) SendMessage(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(response.MessageResponse{
-		ID:        msg.ID,
-		ChatID:    msg.ChatID,
+		ID:        msg.ID.Hex(),
+		ChatID:    msg.ChatID.Hex(),
 		SenderID:  msg.SenderID,
 		Text:      msg.Text,
-		Timestamp: msg.Timestamp.String(),
+		Timestamp: msg.Timestamp.UTC().Format(time.RFC3339),
 	})
 }
 
@@ -55,11 +62,11 @@ func (cc *ChatController) GetMessages(ctx *fiber.Ctx) error {
 	var res []response.MessageResponse
 	for _, m := range list {
 		res = append(res, response.MessageResponse{
-			ID:        m.ID,
-			ChatID:    m.ChatID,
+			ID:        m.ID.Hex(),
+			ChatID:    m.ChatID.Hex(),
 			SenderID:  m.SenderID,
 			Text:      m.Text,
-			Timestamp: m.Timestamp.String(),
+			Timestamp: m.Timestamp.UTC().Format(time.RFC3339),
 		})
 	}
 
@@ -68,21 +75,37 @@ func (cc *ChatController) GetMessages(ctx *fiber.Ctx) error {
 
 func (cc *ChatController) MyChats(ctx *fiber.Ctx) error {
 	userID := ctx.Locals("user_id").(uint)
+	userIDStr := fmt.Sprint(userID)
 
-	list, err := cc.service.GetMyChats(fmt.Sprint(userID))
+	list, err := cc.service.GetMyChats(fmt.Sprint(userIDStr))
 	if err != nil {
 		return ctx.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	var res []response.ChatResponse
 	for _, c := range list {
+		therapistID := ""
+        for _, p := range c.Participants {
+            if p != userIDStr {
+                therapistID = p
+            }
+        }
+		// Participants left as-is (string array)
+		lastTime := ""
+		if !c.LastMessageTime.IsZero() {
+			lastTime = c.LastMessageTime.UTC().Format(time.RFC3339)
+		}
 		res = append(res, response.ChatResponse{
-			ID:              c.ID,
+			ID:              c.ID.Hex(),
 			Participants:    c.Participants,
+			TherapistID:     therapistID,
 			LastMessageText: c.LastMessageText,
-			LastMessageTime: c.LastMessageTime.String(),
+			LastMessageTime: lastTime,
 		})
 	}
 
-	return ctx.JSON(res)
+	return ctx.JSON(fiber.Map{
+        "data": res,          
+        "message": "success", 
+    })
 }

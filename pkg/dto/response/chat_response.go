@@ -5,6 +5,7 @@ type ChatResponse struct {
 	Participants    []string `json:"participants"`
 	LastMessageText string `json:"last_message"`
 	LastMessageTime string `json:"last_time"`
+	TherapistID  string    `json:"therapist_id"`
 }
 
 type MessageResponse struct {

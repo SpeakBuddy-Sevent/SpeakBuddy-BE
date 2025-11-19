@@ -62,7 +62,7 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 	api.Post("/auth/register", rs.AuthController.Register)
 	api.Post("/auth/login", rs.AuthController.Login)
 
-	therapist := api.Group("/therapists")
+	therapist := api.Group("/therapist")
 	therapist.Get("/", rs.TherapistController.GetAll)
 	therapist.Get("/:id", rs.TherapistController.GetByID)
 
@@ -94,7 +94,7 @@ func (rs *RouteSetup) Setup(app *fiber.App) {
 		protected.Get("/consultation/my", rs.ConsultationController.MyConsultations)
 		protected.Get("/consultation/therapist", rs.ConsultationController.TherapistConsultations)
 
-		protected.Post("/chat/:therapistID/send", rs.ChatController.SendMessage)
+		protected.Post("/chat/send/:therapistID", rs.ChatController.SendMessage)
 		protected.Get("/chat/:chatID/messages", rs.ChatController.GetMessages)
 		protected.Get("/chat/me", rs.ChatController.MyChats)
 

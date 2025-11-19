@@ -32,12 +32,19 @@ func (s *chatService) SendMessage(userID, therapistID string, req request.SendMe
 		ChatID:    chat.ID,
 		SenderID:  userID,
 		Text:      req.Text,
-		Timestamp: time.Now(),
+		Timestamp: time.Now().UTC(),
 	}
 
-	err = s.repo.InsertMessage(message)
-	if err != nil {
+	// insert message
+	if err := s.repo.InsertMessage(message); err != nil {
 		return nil, err
+	}
+
+	// update chat last message summary
+	// chat.ID is primitive.ObjectID so convert to hex string for repo helper
+	if err := s.repo.UpdateChatLastMessage(message.ChatID.Hex(), message.Text, message.Timestamp); err != nil {
+		// log error but do not fail sending message; you can change behavior if desired
+		// return nil, err
 	}
 
 	return message, nil
