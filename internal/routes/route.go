@@ -46,7 +46,7 @@ func NewRouteSetup(
 
 func (rs *RouteSetup) Setup(app *fiber.App) {
 	app.Use(cors.New(cors.Config{
-        AllowOrigins:     "http://localhost:3000, https://speakbuddy-henna.vercel.app, https://speakbuddy-id.vercel.app",
+        AllowOrigins:     "http://localhost:3000,https://speakbuddy-henna.vercel.app,https://speakbuddy-id.vercel.app",
         AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
         AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
        //  ExposeHeaders:    "Content-Length",
