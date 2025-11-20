@@ -152,5 +152,27 @@ func (cc *ChatController) SendToChat(c *fiber.Ctx) error {
     })
 }
 
+func (cc *ChatController) StartChat(c *fiber.Ctx) error {
+    rawUserID := c.Locals("user_id")
+    if rawUserID == nil {
+        return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+    }
+
+    userID := fmt.Sprint(rawUserID)
+    therapistID := c.Params("therapistID")
+    if therapistID == "" {
+        return c.Status(400).JSON(fiber.Map{"error": "therapistID required"})
+    }
+
+    chat, err := cc.service.StartChat(userID, therapistID)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+    }
+
+    return c.JSON(fiber.Map{
+        "chat_id": chat.ID.Hex(),
+        "participants": chat.Participants,
+    })
+}
 
 

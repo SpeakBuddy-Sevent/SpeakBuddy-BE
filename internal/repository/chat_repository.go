@@ -17,6 +17,8 @@ type ChatRepository interface {
 	GetMessages(chatID string) ([]models.Message, error)
 	GetUserChats(userID string) ([]models.Chat, error)
 	UpdateChatLastMessage(chatID string, text string, ts time.Time) error
+	FindChatByParticipants(userID, therapistID string) (*models.Chat, error)
+    CreateChat(chat *models.Chat) error
 }
 
 type chatRepository struct {
@@ -118,4 +120,28 @@ func (r *chatRepository) UpdateChatLastMessage(chatID string, text string, ts ti
 		}},
 	)
 	return err
+}
+
+func (r *chatRepository) FindChatByParticipants(userID, therapistID string) (*models.Chat, error) {
+    ctx := context.Background()
+
+    filter := bson.M{
+        "participants": bson.M{"$all": bson.A{userID, therapistID}},
+    }
+
+    var chat models.Chat
+    err := r.chatCol.FindOne(ctx, filter).Decode(&chat)
+    if err == mongo.ErrNoDocuments {
+        return nil, nil
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    return &chat, nil
+}
+
+func (r *chatRepository) CreateChat(chat *models.Chat) error {
+    _, err := r.chatCol.InsertOne(context.Background(), chat)
+    return err
 }

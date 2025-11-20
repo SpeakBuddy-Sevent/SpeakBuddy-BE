@@ -15,6 +15,7 @@ type ChatService interface {
 	GetChatMessages(chatID string) ([]models.Message, error)
 	GetMyChats(userID string) ([]models.Chat, error)
 	SendMessageToChat(chatID string, userID string, req request.SendMessageRequest) (*models.Message, error)
+	StartChat(userID string, therapistID string) (*models.Chat, error)
 }
 
 type chatService struct {
@@ -86,4 +87,26 @@ func (s *chatService) SendMessageToChat(chatID string, userID string, req reques
     }
 
     return message, nil
+}
+
+func (s *chatService) StartChat(userID string, therapistID string) (*models.Chat, error) {
+    // 1. Cari chat existing
+    chat, err := s.repo.FindChatByParticipants(userID, therapistID)
+    if err == nil && chat != nil {
+        return chat, nil // sudah ada
+    }
+
+    // 2. Buat baru
+    newChat := models.Chat{
+        ID: primitive.NewObjectID(),
+        Participants: []string{userID, therapistID},
+        LastMessageText: "",
+        LastMessageTime: time.Time{},
+    }
+
+    if err := s.repo.CreateChat(&newChat); err != nil {
+        return nil, err
+    }
+
+    return &newChat, nil
 }
